@@ -1,0 +1,417 @@
+Fraud Detection Application using Python Microservices and Machine Learning 
+
+ 
+
+This POC (Proof of concept) aims to develop a Fraud Detection Application using Python-based microservices and Machine Learning (ML). The system will analyse transaction data to detect fraudulent activities in real-time based on the given dataset. 
+
+What is the Goal of This Project 
+
+Many companies face financial losses due to fraudulent transactions. To prevent this, we will create a system that detects fraud automatically. 
+
+We will use 
+
+Python Microservices - To break down the system into small, independent parts. 
+Machine Learning (ML) - To train a model that can detect fraud based on past transactions. 
+Database - To store transaction details and fraud detection results. 
+APIs - To allow different parts of the system to communicate. 
+
+Understanding the Data (AISquad_Dataset.csv) 
+
+We have a dataset (large file) that contains details of transactions. Each transaction has details like:	 
+
+Field  
+
+Explanation 
+
+Trans_date_trans_time 
+
+Date & time of transaction 
+
+cc_num 
+
+Credit card number 
+
+merchant 
+
+Store or business where the transaction happened 
+
+category 
+
+Type of store (e.g., groceries, electronics, personal care, etc.) 
+
+amt 
+
+Amount spent 
+
+first_name, last_name 
+
+Customer’s name 
+
+Gender 
+
+Male or Female 
+
+City, State, Zip 
+
+Location details 
+
+Lat, Long 
+
+Geographical coordinates 
+
+Job 
+
+Customer’s profession 
+
+Date of birth 
+
+Customer’s birth date 
+
+Trans_num 
+
+Unique transaction ID 
+
+Unix_time 
+
+Time of transaction in machine format 
+
+Merch_lat, Merch_long 
+
+ Store’s location 
+
+is_fraud 
+
+Label (Target Value) - 1 means fraud, 0 means genuine 
+
+ 
+
+Why do we need this data 
+
+To train our ML model, we need past transaction data. The last column (is_fraud) tells us whether the transaction was fraudulent (1) or genuine (0). The ML model will learn patterns from this data and predict if a new transaction is fraud or not. 
+
+We divide the project into 6 main stages 
+
+ Data Preprocessing - Clean and prepare the data 
+
+Machine Learning Model Development - Train the model 
+
+Microservices Development - Create an API for fraud detection 
+
+Integration - Connect API with other services 
+
+Deployment - Make the service available for use 
+
+Testing & Optimization - Improve accuracy and performance 
+
+Data Preprocessing (Cleaning & Preparing Data) 
+
+Raw data contains missing values, duplicates, and text columns that ML cannot process. We clean and convert it into a format that a model can understand. 
+
+*********Steps in Data Preprocessing *****************
+
+1) Load Data 
+
+Read the dataset from a CSV file. 
+
+Example: AISquad_Dataset.csv (555,718 rows of transactions). 
+
+2) Handle Missing Values 
+
+Some transactions may have missing information (e.g., city name missing). 
+
+We fill or remove them. 
+
+3) Remove Unnecessary Columns 
+
+Names, street addresses, and job titles are not useful for fraud detection. 
+
+We drop them. 
+
+4) Convert Text Data into Numbers 
+
+ML models do not understand text like "Amazon", "California", "Shopping". 
+
+We use Label Encoding (convert text to numbers). 
+
+5) Normalize Data 
+
+Some values like amount can be very large (50000) or very small (1). 
+
+We normalize them using MinMaxScaler (scale values between 0 and 1). 
+
+Machine Learning Model Development 
+
+We need an ML model that can analyse past transactions and predict fraud. 
+
+*****************Steps in ML Model Development ******************
+
+1) Split Data into Training & Testing Sets 
+
+80% of the data - Used for training the model. 
+
+20% of the data - Used for testing the model’s accuracy. 
+
+2) Choose an ML Algorithm 
+
+We can use XGBoost, which is great for fraud detection because: 
+Works well with large datasets. 
+ Detects complex fraud patterns. 
+
+3) Train the Model 
+
+The model learns from past transactions to understand fraud patterns. 
+
+4) Evaluate Accuracy 
+
+We test the model on unseen transactions and check its accuracy. 
+
+5) Save the Model 
+
+After training, we save the model as a file (frauddetection_model.pkl). 
+
+This file will be loaded in the microservice to make real-time predictions. 
+
+We need to expose the ML model as a service so that other applications (e.g., banking apps) can use it. 
+
+******************Steps in Deploying ML Model as a REST API Using FastAPI *************
+
+1) Use FastAPI - A Python framework for creating APIs. 
+2) Load the Trained ML Model → Load frauddetection_model.pkl. 
+3) Define an API Endpoint 
+
+The API should accept transaction details as input. 
+
+The ML model will predict if it’s fraud or not. 
+
+API Sample Example 
+
+Request: 
+
+{ 
+
+  "cc_num": 1234567890123456, 
+
+    "merchant": "Amazon", 
+
+    "category": "Shopping", 
+
+    "amt": 100.50, 
+
+    "city_pop": 50000, 
+
+    "state": "CA" 
+
+} 
+
+Response: 
+
+{ 
+
+    "fraud": 1 
+
+} 
+
+The API processes the request and returns a prediction. 
+
+**********Develop Each Microservice *************
+
+1. Transaction Processing Service 
+
+Receives new transaction details from users. 
+
+Sends transaction data to the Fraud Detection Service. 
+
+Stores the transaction result in the Database Service. 
+
+Why is it important 
+
+This is the entry point of our system. 
+
+Without it, we cannot process or check transactions. 
+
+How It Works 
+
+1) A user (or another sys tem) sends transaction data. 
+2) The service forwards the data to the Fraud Detection Service. 
+3) It receives the fraud result and stores it in the Database Service. 
+
+2. Fraud Detection Service (ML Model) 
+
+Uses an ML model to analyse the transaction. 
+
+Predicts whether it is fraudulent (1) or genuine (0). 
+
+Sends the result back to the Transaction Processing Service. 
+
+Why is it important 
+
+It protects users from fraudulent transactions. 
+
+Helps banks block suspicious transactions before they happen. 
+
+How It Works 
+
+1) The Transaction Processing Service sends transaction details. 
+2) The Fraud Detection Service loads the trained ML model (frauddetection_model.pkl). 
+3) The model predicts fraud or not fraud. 
+4) It sends the result (1 = fraud, 0 = genuine) back to the Transaction Processing Service. 
+
+3. Database Service 
+
+Stores transaction details. 
+
+Stores whether each transaction was fraudulent or genuine. 
+
+Helps in generating fraud reports. 
+
+Why is it important 
+
+If a user wants to see their past transactions, we need a database. 
+
+If we want to improve our ML model, we need to store past fraud transactions. 
+
+How It Works 
+
+1) The Transaction Processing Service sends transaction data and fraud results. 
+2) The Database Service stores it in PostgreSQL / MySQL. 
+3) If needed, it provides past transaction history to other services. 
+
+4. Logging & Monitoring Service 
+
+Logs every transaction request and fraud detection result. 
+
+Monitors system health (detects failures). 
+
+Sends alerts in case of errors. 
+
+Why is it important 
+
+If something fails, we need logs to debug the problem. 
+
+If fraud activity increases suddenly, the bank should be alerted. 
+
+How It Works 
+
+1) Every request and responses are logged. 
+2) If a service fails, this service notifies the admin. 
+3) If fraud increases suddenly, it raises an alert. 
+
+Connect the System Using APIs 
+
+ Why do we need API integration 
+
+Each microservice works separately but needs to communicate. 
+
+We connect them using REST APIs. 
+
+This makes our system modular, meaning each part can be changed without breaking the whole system. 
+
+How the Microservices Communicate 
+
+A transaction is made. 
+
+The Transaction Processing Service sends the transaction details to Fraud Detection API. 
+
+The Fraud Detection API runs the ML model and predicts fraud or not. 
+
+The result is sent back (1 = Fraud, 0 = Not Fraud). 
+
+The Database Service stores the result. 
+
+The Logging Service tracks API responses and errors. 
+
+Summary 
+
+ML Model Training -Train and save the fraud detection model (frauddetection_model.pkl). 
+
+Convert to API Using FastAPI - Create an API that loads the model and predicts fraud. 
+
+Develop Other Microservices - Transaction Processing, Database, and Logging services. 
+
+Connect Everything via APIs -The Transaction Processing Service calls the Fraud Detection API for predictions. 
+
+So, first, we train the model, then deploy it as an API, and finally, we integrate all microservices. 
+
+Tools Used 
+
+ 
+
+Step 
+
+Open-Source Tools Used 
+
+Purpose 
+
+1. Data Preprocessing 
+
+Pandas, NumPy, Scikit-learn 
+
+Clean and prepare data for ML 
+
+2. ML Model Training 
+
+Scikit-learn, XGBoost, Matplotlib, Seaborn 
+
+Train model for fraud detection 
+
+3. Backend API Development 
+
+FastAPI 
+
+Create REST APIs for microservices 
+
+4. Database 
+
+PostgreSQL/MySQL 
+
+Store transaction and fraud data 
+
+5. Service Communication 
+
+Requests 
+
+Connect microservices 
+
+6. Deployment 
+
+Docker 
+
+Package and deploy microservices 
+
+7. Model Deployment 
+
+FastAPI 
+
+Use ML model in real-time 
+
+8. Monitoring & Logging 
+
+Prometheus, Grafana, Python Logging 
+
+Track performance & detect issues 
+
+9. Testing 
+
+Pytest 
+
+Ensure system accuracy and reliability 
+
+10. Frontend (Optional) 
+
+Streamlit 
+
+Display fraud detection results 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
